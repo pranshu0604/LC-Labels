@@ -7,20 +7,44 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [worksheets, setWorksheets] = useState<string[]>([]);
+  const [selectedWorksheet, setSelectedWorksheet] = useState<string>("");
+  const [rowRangeType, setRowRangeType] = useState<"all" | "range">("all");
+  const [startRow, setStartRow] = useState<string>("1");
+  const [endRow, setEndRow] = useState<string>("");
 
-  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
     setFile(f);
+    if (f) {
+      await extractWorksheets(f);
+    }
   }
 
   async function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     const f = e.dataTransfer.files?.[0] ?? null;
     setFile(f);
+    if (f) {
+      await extractWorksheets(f);
+    }
   }
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault();
+  }
+
+  async function extractWorksheets(f: File) {
+    try {
+      const XLSX = await import("xlsx");
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheets = wb.SheetNames;
+      setWorksheets(sheets);
+      setSelectedWorksheet(sheets[0] || "");
+    } catch (err) {
+      console.error("Failed to extract worksheets:", err);
+    }
   }
 
   async function handleUpload() {
@@ -28,9 +52,19 @@ export default function Home() {
     setLoading(true);
     try {
       const buf = await file.arrayBuffer();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/octet-stream",
+        "x-filename": file.name,
+        "x-worksheet": selectedWorksheet,
+        "x-row-range-type": rowRangeType,
+      };
+      if (rowRangeType === "range") {
+        headers["x-start-row"] = startRow;
+        if (endRow) headers["x-end-row"] = endRow;
+      }
       const res = await fetch("/api/labels", {
         method: "POST",
-        headers: { "Content-Type": "application/octet-stream", "x-filename": file.name },
+        headers,
         body: buf,
       });
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -108,6 +142,85 @@ export default function Home() {
             )}
           </div>
         </div>
+
+        {/* Worksheet & Row Range Selection */}
+        {file && worksheets.length > 0 && (
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 mb-10 border-4 border-blue-200">
+            <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600 mb-6 text-center">
+              Configure Your Labels
+            </h3>
+            
+            {/* Worksheet Selection */}
+            <div className="mb-6">
+              <label className="block text-gray-700 font-bold mb-2">Select Worksheet</label>
+              <select
+                value={selectedWorksheet}
+                onChange={(e) => setSelectedWorksheet(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 font-medium"
+              >
+                {worksheets.map((ws) => (
+                  <option key={ws} value={ws}>
+                    {ws}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Row Range Selection */}
+            <div>
+              <label className="block text-gray-700 font-bold mb-2">Row Range</label>
+              <div className="flex items-center gap-4 mb-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="rowRange"
+                    checked={rowRangeType === "all"}
+                    onChange={() => setRowRangeType("all")}
+                    className="w-5 h-5 text-blue-600"
+                  />
+                  <span className="font-medium text-gray-700">All Rows</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="rowRange"
+                    checked={rowRangeType === "range"}
+                    onChange={() => setRowRangeType("range")}
+                    className="w-5 h-5 text-blue-600"
+                  />
+                  <span className="font-medium text-gray-700">Specify Range</span>
+                </label>
+              </div>
+
+              {rowRangeType === "range" && (
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm text-gray-600 mb-1">Start Row</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={startRow}
+                      onChange={(e) => setStartRow(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm text-gray-600 mb-1">End Row (optional)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={endRow}
+                      onChange={(e) => setEndRow(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200"
+                      placeholder="Leave empty for all"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Generate Button */}
         <div className="flex flex-col items-center gap-6">

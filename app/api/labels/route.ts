@@ -11,28 +11,49 @@ function getField(row: any, name: string) {
 export async function POST(req: Request) {
   try {
     const filename = req.headers.get("x-filename") || "upload.xlsx";
+    const worksheetName = req.headers.get("x-worksheet") || "";
+    const rowRangeType = req.headers.get("x-row-range-type") || "all";
+    const startRowStr = req.headers.get("x-start-row") || "1";
+    const endRowStr = req.headers.get("x-end-row") || "";
+    
     const arrayBuffer = await req.arrayBuffer();
     const buf = Buffer.from(arrayBuffer);
 
     const inputWb = XLSX.read(buf, { type: "buffer" });
-    const firstSheetName = inputWb.SheetNames[0];
-    const sheet = inputWb.Sheets[firstSheetName];
-    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    const sheetName = worksheetName || inputWb.SheetNames[0];
+    const sheet = inputWb.Sheets[sheetName];
+    if (!sheet) {
+      return NextResponse.json({ error: `Worksheet "${sheetName}" not found` }, { status: 400 });
+    }
+    let rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    
+    // Apply row range filter if specified
+    if (rowRangeType === "range") {
+      const startRow = parseInt(startRowStr, 10) || 1;
+      const endRow = endRowStr ? parseInt(endRowStr, 10) : rows.length;
+      // Excel rows are 1-indexed, but after sheet_to_json the first data row is index 0
+      // Assuming header is row 1, data starts at row 2 → index 0
+      // If user says "start row 2", they mean the first data row (index 0)
+      // If user says "start row 3", they mean index 1, etc.
+      const startIdx = Math.max(0, startRow - 2); // row 2 → index 0, row 3 → index 1
+      const endIdx = endRow - 1; // row 2 → index 1 (exclusive slice), row 3 → index 2
+      rows = rows.slice(startIdx, endIdx);
+    }
 
     const labels: string[] = rows.map((r) => {
-      const name = getField(r, "name");
-      const contact = getField(r, "ph. no.");
-      const address = getField(r, "add.");
-      const from = getField(r, "from");
+      const name = String(getField(r, "name") || "").toUpperCase();
+      const contact = String(getField(r, "ph. no.") || "").toUpperCase();
+      const address = String(getField(r, "add.") || "").toUpperCase();
+      const from = String(getField(r, "from") || "").toUpperCase();
       // Use real line breaks for Excel cells
-      return `${name}\n${contact}\n${address}\n\nFrom:${from}`;
+      return `${name}\n${contact}\n${address}\n\nFROM:${from}`;
     });
 
     // Use ExcelJS to write the output workbook so styles are preserved reliably
     const outWb = new ExcelJS.Workbook();
     const worksheet = outWb.addWorksheet("Labels");
 
-    // Set columns: filled column, thin spacer, filled, thin spacer, filled
+    // Set columns: filled column, thin spacer, filled, thin spacer, filled (exactly 5 columns)
     worksheet.columns = [
       { header: "", key: "c1", width: 45 }, // filled
       { header: "", key: "s1", width: 3 }, // spacer
@@ -40,6 +61,9 @@ export async function POST(req: Request) {
       { header: "", key: "s2", width: 3 }, // spacer
       { header: "", key: "c3", width: 45 }, // filled
     ];
+    
+    // Ensure no additional columns are created beyond these 5
+    worksheet.properties.defaultColWidth = undefined;
 
     // Helper: estimate required row height (points) for wrapped text in given column width (chars)
     function estimateLinesForText(text: string, colWidthChars: number) {
