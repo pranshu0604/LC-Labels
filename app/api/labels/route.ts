@@ -54,12 +54,13 @@ export async function POST(req: Request) {
     const worksheet = outWb.addWorksheet("Labels");
 
     // Set columns: filled column, thin spacer, filled, thin spacer, filled (exactly 5 columns)
+    // Note: ExcelJS width is in Excel column units (approximately character widths)
     worksheet.columns = [
-      { header: "", key: "c1", width: 45 }, // filled
-      { header: "", key: "s1", width: 3 }, // spacer
-      { header: "", key: "c2", width: 45 }, // filled
-      { header: "", key: "s2", width: 3 }, // spacer
-      { header: "", key: "c3", width: 45 }, // filled
+      { header: "", key: "c1", width: 44 }, // filled (~300 pixels)
+      { header: "", key: "s1", width: 3 }, // spacer (~20 pixels)
+      { header: "", key: "c2", width: 44 }, // filled (~300 pixels)
+      { header: "", key: "s2", width: 3 }, // spacer (~20 pixels)
+      { header: "", key: "c3", width: 44 }, // filled (~300 pixels)
     ];
     
     // Ensure no additional columns are created beyond these 5
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
     }
 
     // column widths (in characters) corresponding to worksheet.columns width values
-    const colWidthsChars = [45, 3, 45, 3, 45];
+    const colWidthsChars = [40, 3, 40, 3, 40];
     const lineHeightPoints = 15; // approximate line height in points per text line
 
     // Add rows: one label per row, duplicated across the three filled columns with thin empty columns between
@@ -103,9 +104,8 @@ export async function POST(req: Request) {
       // set row height based on the maximum number of lines among filled cells
       row.height = Math.max(1, maxLines) * lineHeightPoints;
 
-      // apply alignment and wrapText only to filled cells
-      const filledCellIndices = [1, 3, 5]; // 1-based cell indices in ExcelJS
-      for (const idx of filledCellIndices) {
+      // apply alignment and wrapText to all cells
+      for (let idx = 1; idx <= 5; idx++) {
         const cell = row.getCell(idx);
         cell.alignment = { wrapText: true, horizontal: "center", vertical: "middle" };
         if (cell.value == null) cell.value = "";
@@ -114,7 +114,22 @@ export async function POST(req: Request) {
       // insert a thin empty spacer row after the filled row
       const spacer = worksheet.addRow(["", "", "", "", ""]);
       spacer.height = 6; // small spacer height in points
+      
+      // Ensure spacer row only has 5 cells
+      for (let idx = 1; idx <= 5; idx++) {
+        const cell = spacer.getCell(idx);
+        if (cell.value == null) cell.value = "";
+      }
     }
+
+    // Remove any columns beyond column E that might have been created implicitly
+    const extraColumns = worksheet.columnCount - 5;
+    if (extraColumns > 0) {
+      worksheet.spliceColumns(6, extraColumns);
+    }
+
+    // Limit the print area to the first five columns for clarity when printing
+    worksheet.pageSetup.printArea = `A1:E${worksheet.rowCount}`;
 
     // Generate buffer
     const outBuf = await outWb.xlsx.writeBuffer();
