@@ -104,10 +104,16 @@ export async function POST(req: Request) {
       // set row height based on the maximum number of lines among filled cells
       row.height = Math.max(1, maxLines) * lineHeightPoints;
 
-      // apply alignment and wrapText to all cells
+      // apply alignment, wrapText and thick border to all cells
       for (let idx = 1; idx <= 5; idx++) {
         const cell = row.getCell(idx);
         cell.alignment = { wrapText: true, horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thick" },
+          left: { style: "thick" },
+          bottom: { style: "thick" },
+          right: { style: "thick" },
+        };
         if (cell.value == null) cell.value = "";
       }
 
@@ -115,9 +121,15 @@ export async function POST(req: Request) {
       const spacer = worksheet.addRow(["", "", "", "", ""]);
       spacer.height = 6; // small spacer height in points
       
-      // Ensure spacer row only has 5 cells
+      // Ensure spacer row only has 5 cells and apply thick borders there too
       for (let idx = 1; idx <= 5; idx++) {
         const cell = spacer.getCell(idx);
+        cell.border = {
+          top: { style: "thick" },
+          left: { style: "thick" },
+          bottom: { style: "thick" },
+          right: { style: "thick" },
+        };
         if (cell.value == null) cell.value = "";
       }
     }
