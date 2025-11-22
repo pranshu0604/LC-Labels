@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(git -C /Users/pranshupandey/Developer/Client/litchowklabels log --oneline -10)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

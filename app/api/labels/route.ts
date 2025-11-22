@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     const rowRangeType = req.headers.get("x-row-range-type") || "all";
     const startRowStr = req.headers.get("x-start-row") || "1";
     const endRowStr = req.headers.get("x-end-row") || "";
+    const labelMode = req.headers.get("x-label-mode") || "with-from";
     
     const arrayBuffer = await req.arrayBuffer();
     const buf = Buffer.from(arrayBuffer);
@@ -44,9 +45,13 @@ export async function POST(req: Request) {
       const name = String(getField(r, "name") || "").toUpperCase();
       const contact = String(getField(r, "ph. no.") || "").toUpperCase();
       const address = String(getField(r, "add.") || "").toUpperCase();
-      const from = String(getField(r, "from") || "").toUpperCase();
-      // Use real line breaks for Excel cells
-      return `${name}\n${contact}\n${address}\n\nFROM:${from}`;
+
+      if (labelMode === "with-from") {
+        const from = String(getField(r, "from") || "").toUpperCase();
+        return `${name}\n${contact}\n${address}\n\nFROM:${from}`;
+      } else {
+        return `${name}\n${contact}\n${address}`;
+      }
     });
 
     // Use ExcelJS to write the output workbook so styles are preserved reliably
