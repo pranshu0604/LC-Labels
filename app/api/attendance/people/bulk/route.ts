@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
 
     // Create a map for quick lookup by registration number
     const existingPeopleMap = new Map(
-      allExistingPeople.map(p => [p.registrationNo, p])
+      allExistingPeople.map((p: any) => [p.registrationNo, p])
     );
 
     const results = {
