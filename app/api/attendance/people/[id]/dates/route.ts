@@ -27,7 +27,7 @@ export async function GET(
     });
 
     // Format dates as YYYY-MM-DD strings
-    const dates = attendanceRecords.map((record) => {
+    const dates = attendanceRecords.map((record: { date: Date }) => {
       const date = new Date(record.date);
       return date.toISOString().split("T")[0];
     });
