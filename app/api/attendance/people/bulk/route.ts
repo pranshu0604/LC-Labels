@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 
@@ -226,7 +225,8 @@ export async function POST(req: NextRequest) {
         // Update UIDs
         const newIds = newPeople.map(p => p.id);
         if (newIds.length > 0) {
-             await prisma.$executeRaw`UPDATE people SET uid = 'UID-' || id::text WHERE id IN (${Prisma.join(newIds)})`;
+             const idsList = newIds.join(',');
+             await prisma.$executeRawUnsafe(`UPDATE people SET uid = 'UID-' || id::text WHERE id IN (${idsList})`);
         }
 
         results.added = newPeople.map(p => ({
