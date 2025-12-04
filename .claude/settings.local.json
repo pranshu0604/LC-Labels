@@ -3,7 +3,15 @@
     "allow": [
       "Bash(tree:*)",
       "Bash(git -C /Users/pranshupandey/Developer/Client/litchowklabels log --oneline -10)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma init)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma db pull:*)",
+      "Bash(npx prisma generate)",
+      "Bash(psql:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []

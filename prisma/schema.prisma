@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Person {
+  id             Int          @id @default(autoincrement())
+  name           String       @db.VarChar(255)
+  registrationNo String       @unique @map("registration_no") @db.VarChar(100)
+  uid            String?      @unique @map("uid") @db.VarChar(50)
+  contactNo      String?      @map("contact_no") @db.VarChar(50)
+  createdAt      DateTime?    @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime?    @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  attendance     Attendance[]
+
+  @@index([registrationNo], map: "idx_people_registration_no")
+  @@map("people")
+}
+
+model Attendance {
+  id        Int       @id @default(autoincrement())
+  personId  Int       @map("person_id")
+  date      DateTime  @db.Date
+  createdAt DateTime? @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @map("created_at") @db.Timestamptz(6)
+  person    Person    @relation(fields: [personId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([personId, date])
+  @@index([date], map: "idx_attendance_date")
+  @@map("attendance")
+}
