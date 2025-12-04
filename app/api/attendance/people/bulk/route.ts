@@ -3,6 +3,14 @@ import prisma from "@/lib/prisma";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 
+interface ExistingPerson {
+  id: number;
+  uid: string | null;
+  name: string;
+  registrationNo: string;
+  contactNo: string | null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     console.log('🔄 [BULK UPLOAD] Starting bulk upload process');
@@ -117,8 +125,8 @@ export async function POST(req: NextRequest) {
     console.log(`✅ [BULK UPLOAD] Fetched ${allExistingPeople.length} existing people`);
 
     // Create a map for quick lookup by registration number
-    const existingPeopleMap = new Map(
-      allExistingPeople.map((p: any) => [p.registrationNo, p])
+    const existingPeopleMap = new Map<string, ExistingPerson>(
+      allExistingPeople.map((p) => [p.registrationNo, p])
     );
 
     const results = {
