@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +20,55 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = await file.arrayBuffer();
+
+    // 1. Identify yellow rows using ExcelJS
+    const yellowRows = new Set<number>();
+    try {
+      const excelJsWorkbook = new ExcelJS.Workbook();
+      await excelJsWorkbook.xlsx.load(buffer);
+      
+      // Find the correct sheet in ExcelJS
+      // We need to determine the sheet name first using XLSX logic to be consistent, 
+      // but we can't use XLSX.read yet if we want to be efficient? 
+      // Actually, we can just read it twice, it's fine.
+      const tempXlsxWorkbook = XLSX.read(buffer);
+      const targetSheetName = worksheetName && tempXlsxWorkbook.SheetNames.includes(worksheetName)
+        ? worksheetName
+        : tempXlsxWorkbook.SheetNames[0];
+
+      const excelJsSheet = excelJsWorkbook.getWorksheet(targetSheetName);
+      
+      if (excelJsSheet) {
+        excelJsSheet.eachRow((row, rowNumber) => {
+          let isYellow = false;
+          
+          // Check row fill
+          const rowFill = row.fill as any;
+          if (rowFill && rowFill.type === 'pattern' && rowFill.fgColor && rowFill.fgColor.argb && rowFill.fgColor.argb.includes('FFFF00')) {
+            isYellow = true;
+          }
+
+          // Check cell fills if row is not yellow
+          if (!isYellow) {
+            row.eachCell((cell) => {
+              const cellFill = cell.fill as any;
+              if (cellFill && cellFill.type === 'pattern' && cellFill.fgColor && cellFill.fgColor.argb && cellFill.fgColor.argb.includes('FFFF00')) {
+                isYellow = true;
+              }
+            });
+          }
+
+          if (isYellow) {
+            yellowRows.add(rowNumber);
+          }
+        });
+      }
+      console.log(`🎨 [BULK UPLOAD] Found ${yellowRows.size} yellow rows to skip`);
+    } catch (e) {
+      console.warn("⚠️ [BULK UPLOAD] Failed to check for yellow rows:", e);
+    }
+
+    // 2. Process with XLSX
     const workbook = XLSX.read(buffer);
 
     console.log('📋 [BULK UPLOAD] Available sheets:', workbook.SheetNames);
@@ -34,6 +84,20 @@ export async function POST(req: NextRequest) {
 
     if (!sheet) {
       return NextResponse.json({ error: "Worksheet not found" }, { status: 400 });
+    }
+
+    // Remove yellow rows from the sheet object before parsing
+    if (yellowRows.size > 0 && sheet['!ref']) {
+      const range = XLSX.utils.decode_range(sheet['!ref']);
+      for (const rowNum of Array.from(yellowRows)) {
+        // ExcelJS is 1-based, XLSX decode_range is 0-based.
+        // We need to delete cells for the row `rowNum - 1`
+        const r = rowNum - 1;
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddress = XLSX.utils.encode_cell({ r, c });
+          delete sheet[cellAddress];
+        }
+      }
     }
 
     const data: any[] = XLSX.utils.sheet_to_json(sheet);
