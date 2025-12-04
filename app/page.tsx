@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
-type LabelMode = "with-from" | "without-from";
+type LabelMode = "with-from" | "without-from" | "name-designation-address-phone";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -216,7 +216,7 @@ export default function Home() {
                 variants={staggerContainer}
                 initial="initial"
                 animate="animate"
-                className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
               >
                 <motion.button
                   variants={scaleIn}
@@ -253,6 +253,24 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-white mb-2 relative z-10">Without &quot;From&quot; Field</h3>
                   <p className="text-slate-400 text-sm relative z-10">Name, Phone, and Address only</p>
                 </motion.button>
+
+                <motion.button
+                  variants={scaleIn}
+                  whileHover={{ scale: 1.02, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setMode("name-designation-address-phone")}
+                  className="group relative p-8 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/30 rounded-2xl hover:border-amber-400 hover:bg-amber-500/20 transition-colors overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600/0 to-orange-600/0 group-hover:from-amber-600/10 group-hover:to-orange-600/10 transition-all" />
+                  <motion.div
+                    whileHover={{ scale: 1.2, rotate: 10 }}
+                    className="text-6xl mb-5 relative z-10"
+                  >
+                    👤
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-white mb-2 relative z-10">Name + Designation</h3>
+                  <p className="text-slate-400 text-sm relative z-10">Name, Designation, Address, and Phone no</p>
+                </motion.button>
               </motion.div>
             </motion.div>
           )}
@@ -288,9 +306,15 @@ export default function Home() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex items-center gap-3"
               >
-                <span className="text-2xl">{mode === "with-from" ? "📦" : "🏷️"}</span>
+                <span className="text-2xl">
+                  {mode === "with-from" ? "📦" : mode === "name-designation-address-phone" ? "👤" : "🏷️"}
+                </span>
                 <span className="text-lg font-semibold text-white">
-                  {mode === "with-from" ? "Labels with From field" : "Labels without From field"}
+                  {mode === "with-from"
+                    ? "Labels with From field"
+                    : mode === "name-designation-address-phone"
+                    ? "Labels with Name, Designation, Address, Phone no"
+                    : "Labels without From field"}
                 </span>
               </motion.div>
 
@@ -306,7 +330,9 @@ export default function Home() {
                     Upload Your Excel File
                   </h2>
                   <p className="text-slate-400">
-                    We support .xls and .xlsx files with name, contact, and address columns
+                    {mode === "name-designation-address-phone"
+                      ? "We support .xls and .xlsx files with Name, Designation, Address, and Phone no columns"
+                      : "We support .xls and .xlsx files with name, contact, and address columns"}
                   </p>
                 </div>
 

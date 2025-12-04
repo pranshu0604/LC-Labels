@@ -27,7 +27,55 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Worksheet "${sheetName}" not found` }, { status: 400 });
     }
     let rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-    
+
+    // Debug: log first row keys to see column names
+    if (rows.length > 0) {
+      console.log("Available columns:", Object.keys(rows[0]));
+      console.log("First row data:", rows[0]);
+    }
+
+    // Check if the first row contains the actual headers (common issue with merged cells or non-standard spreadsheets)
+    // If we detect __EMPTY columns and first row has "Name", "Designation", etc., re-parse with correct header row
+    const firstRowKeys = rows.length > 0 ? Object.keys(rows[0]) : [];
+    const hasEmptyColumns = firstRowKeys.some(k => k.includes('__EMPTY'));
+
+    if (hasEmptyColumns && rows.length > 0) {
+      // Check if first row contains header-like values
+      const firstRow = rows[0];
+      const firstRowValues = Object.values(firstRow).map(v => String(v).toLowerCase().trim());
+      const hasHeaderKeywords = firstRowValues.some(v =>
+        v.includes('name') || v.includes('designation') || v.includes('address') || v.includes('phone')
+      );
+
+      if (hasHeaderKeywords) {
+        console.log("Detected header row in data. Re-parsing with correct headers...");
+
+        // Get the range of the sheet
+        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+
+        // Find which row has the actual headers by checking cell values
+        let headerRowIndex = range.s.r; // start row
+        for (let r = range.s.r; r <= Math.min(range.s.r + 10, range.e.r); r++) {
+          const cellAddr = XLSX.utils.encode_cell({ r, c: range.s.c + 1 }); // check second column
+          const cell = sheet[cellAddr];
+          if (cell && String(cell.v).toLowerCase().includes('name')) {
+            headerRowIndex = r;
+            console.log(`Found header row at Excel row ${r + 1}`);
+            break;
+          }
+        }
+
+        // Re-parse with the correct header row
+        rows = XLSX.utils.sheet_to_json(sheet, {
+          defval: "",
+          range: headerRowIndex // start from the header row
+        });
+
+        console.log("Re-parsed columns:", rows.length > 0 ? Object.keys(rows[0]) : []);
+        console.log("Re-parsed first data row:", rows.length > 0 ? rows[0] : {});
+      }
+    }
+
     // Apply row range filter if specified
     if (rowRangeType === "range") {
       const startRow = parseInt(startRowStr, 10) || 1;
@@ -41,16 +89,34 @@ export async function POST(req: Request) {
       rows = rows.slice(startIdx, endIdx);
     }
 
-    const labels: string[] = rows.map((r) => {
-      const name = String(getField(r, "name") || "").toUpperCase();
-      const contact = String(getField(r, "ph. no.") || "").toUpperCase();
-      const address = String(getField(r, "add.") || "").toUpperCase();
+    const labels: string[] = rows.map((r, idx) => {
+      if (labelMode === "name-designation-address-phone") {
+        const name = String(getField(r, "name") || "").toUpperCase();
+        const designation = String(getField(r, "designation") || "").toUpperCase();
+        const address = String(getField(r, "address") || "").toUpperCase();
+        const phone = String(getField(r, "phone no") || "").toUpperCase();
 
-      if (labelMode === "with-from") {
-        const from = String(getField(r, "from") || "").toUpperCase();
-        return `${name}\n${contact}\n${address}\n\nFROM:${from}`;
+        // Debug first row
+        if (idx === 0) {
+          console.log("First label extraction:");
+          console.log("  name:", name);
+          console.log("  designation:", designation);
+          console.log("  address:", address);
+          console.log("  phone:", phone);
+        }
+
+        return `${name}\n${designation}\n${address}\n${phone}`;
       } else {
-        return `${name}\n${contact}\n${address}`;
+        const name = String(getField(r, "name") || "").toUpperCase();
+        const contact = String(getField(r, "ph. no.") || "").toUpperCase();
+        const address = String(getField(r, "add.") || "").toUpperCase();
+
+        if (labelMode === "with-from") {
+          const from = String(getField(r, "from") || "").toUpperCase();
+          return `${name}\n${contact}\n${address}\n\nFROM:${from}`;
+        } else {
+          return `${name}\n${contact}\n${address}`;
+        }
       }
     });
 
@@ -89,11 +155,15 @@ export async function POST(req: Request) {
     const colWidthsChars = [40, 3, 40, 3, 40];
     const lineHeightPoints = 15; // approximate line height in points per text line
 
-    // Add rows: one label per row, duplicated across the three filled columns with thin empty columns between
-    // Also insert a thin spacer row after each filled row to visually separate labels
-    for (const lbl of labels) {
+    // Add rows: 3 labels per row (in columns 1, 3, 5 with spacers in between)
+    // Process labels in chunks of 3
+    for (let i = 0; i < labels.length; i += 3) {
+      const lbl1 = labels[i] || "";
+      const lbl2 = labels[i + 1] || "";
+      const lbl3 = labels[i + 2] || "";
+
       // positions: [filled, spacer, filled, spacer, filled]
-      const values = [lbl, "", lbl, "", lbl];
+      const values = [lbl1, "", lbl2, "", lbl3];
       const row = worksheet.addRow(values);
 
       // compute required lines for each filled cell (columns 1,3,5)
@@ -125,7 +195,7 @@ export async function POST(req: Request) {
       // insert a thin empty spacer row after the filled row
       const spacer = worksheet.addRow(["", "", "", "", ""]);
       spacer.height = 6; // small spacer height in points
-      
+
       // Ensure spacer row only has 5 cells and apply thick borders there too
       for (let idx = 1; idx <= 5; idx++) {
         const cell = spacer.getCell(idx);
