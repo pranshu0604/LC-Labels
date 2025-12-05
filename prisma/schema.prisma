@@ -31,3 +31,67 @@ model Attendance {
   @@index([date], map: "idx_attendance_date")
   @@map("attendance")
 }
+
+model Coordinator {
+  id             Int         @id @default(autoincrement())
+  name           String      @db.VarChar(255)
+  username       String      @unique @db.VarChar(100)
+  password       String      @db.VarChar(255)
+  registrationNo String      @unique @map("registration_no") @db.VarChar(100)
+  createdAt      DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  volunteers     Volunteer[]
+  eventAttendanceSessions EventAttendanceSession[]
+
+  @@index([username], map: "idx_coordinator_username")
+  @@map("coordinators")
+}
+
+model Volunteer {
+  id             Int        @id @default(autoincrement())
+  name           String     @db.VarChar(255)
+  registrationNo String     @unique @map("registration_no") @db.VarChar(100)
+  uid            String?    @map("uid") @db.VarChar(50)
+  contactNo      String     @map("contact_no") @db.VarChar(50)
+  coordinatorId  Int        @map("coordinator_id")
+  attendance     DateTime[] @default([]) @db.Timestamptz(6)
+  createdAt      DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  coordinator    Coordinator @relation(fields: [coordinatorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  eventAttendanceRecords EventAttendanceRecord[]
+
+  @@index([registrationNo], map: "idx_volunteer_registration_no")
+  @@index([coordinatorId], map: "idx_volunteer_coordinator_id")
+  @@map("volunteers")
+}
+
+model EventAttendanceSession {
+  id             Int      @id @default(autoincrement())
+  coordinatorId  Int      @map("coordinator_id")
+  sessionDateTime DateTime @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @map("session_datetime") @db.Timestamptz(6)
+  createdAt      DateTime @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  coordinator    Coordinator @relation(fields: [coordinatorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  attendanceRecords EventAttendanceRecord[]
+
+  @@index([coordinatorId], map: "idx_event_attendance_coordinator_id")
+  @@index([sessionDateTime], map: "idx_event_attendance_session_datetime")
+  @@map("event_attendance_sessions")
+}
+
+model EventAttendanceRecord {
+  id          Int      @id @default(autoincrement())
+  sessionId   Int      @map("session_id")
+  volunteerId Int      @map("volunteer_id")
+  isPresent   Boolean  @default(false) @map("is_present")
+  markedAt    DateTime? @map("marked_at") @db.Timestamptz(6)
+  createdAt   DateTime @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(dbgenerated("(now() AT TIME ZONE 'Asia/Kolkata'::text)")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  session     EventAttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  volunteer   Volunteer @relation(fields: [volunteerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([sessionId, volunteerId])
+  @@index([sessionId], map: "idx_event_attendance_record_session_id")
+  @@index([volunteerId], map: "idx_event_attendance_record_volunteer_id")
+  @@map("event_attendance_records")
+}

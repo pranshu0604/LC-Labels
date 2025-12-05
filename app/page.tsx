@@ -39,6 +39,18 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Coordinator creation states
+  const [showCoordinatorModal, setShowCoordinatorModal] = useState(false);
+  const [coordinatorForm, setCoordinatorForm] = useState({
+    adminPassword: "",
+    name: "",
+    username: "",
+    password: "",
+    registrationNo: "",
+  });
+  const [coordinatorLoading, setCoordinatorLoading] = useState(false);
+  const [coordinatorMessage, setCoordinatorMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   // Fix hydration mismatch by only rendering random particles on client
   React.useEffect(() => {
     setMounted(true);
@@ -134,6 +146,47 @@ export default function Home() {
       alert("Failed to generate labels: " + (err as Error).message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCreateCoordinator(e: React.FormEvent) {
+    e.preventDefault();
+    setCoordinatorLoading(true);
+    setCoordinatorMessage(null);
+
+    try {
+      const res = await fetch("/api/event-attendance/coordinators", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(coordinatorForm),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create coordinator");
+      }
+
+      setCoordinatorMessage({ type: "success", text: "Coordinator created successfully!" });
+      setCoordinatorForm({
+        adminPassword: "",
+        name: "",
+        username: "",
+        password: "",
+        registrationNo: "",
+      });
+
+      setTimeout(() => {
+        setShowCoordinatorModal(false);
+        setCoordinatorMessage(null);
+      }, 2000);
+    } catch (err) {
+      setCoordinatorMessage({
+        type: "error",
+        text: (err as Error).message,
+      });
+    } finally {
+      setCoordinatorLoading(false);
     }
   }
 
@@ -242,13 +295,13 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="flex justify-center"
+                className="flex justify-center gap-4"
               >
                 <motion.button
                   whileHover={{ y: -4, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => window.location.href = "/attendance"}
-                  className="group relative bg-gradient-to-br from-orange-500/10 to-pink-500/10 backdrop-blur-xl rounded-3xl p-6 border border-orange-500/20 hover:border-orange-400/50 transition-all overflow-hidden w-full max-w-md"
+                  className="group relative bg-gradient-to-br from-orange-500/10 to-pink-500/10 backdrop-blur-xl rounded-3xl p-6 border border-orange-500/20 hover:border-orange-400/50 transition-all overflow-hidden flex-1 max-w-md"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/20 group-hover:to-pink-500/20 transition-all duration-500" />
                   <div className="relative z-10 flex items-center gap-4">
@@ -262,6 +315,54 @@ export default function Home() {
                     <div className="ml-auto text-orange-400 group-hover:translate-x-1 transition-transform">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </motion.button>
+
+                {/* Event Attendance Button */}
+                <motion.button
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => window.location.href = "/event-attendance"}
+                  className="group relative bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-xl rounded-3xl p-6 border border-emerald-500/20 hover:border-emerald-400/50 transition-all overflow-hidden flex-1 max-w-md"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/20 group-hover:to-teal-500/20 transition-all duration-500" />
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
+                      🎪
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-bold text-white mb-1">Event Attendance</h3>
+                      <p className="text-sm text-gray-400">Coordinator volunteer tracking</p>
+                    </div>
+                    <div className="ml-auto text-emerald-400 group-hover:translate-x-1 transition-transform">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </motion.button>
+
+                {/* Create Coordinator Button */}
+                <motion.button
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowCoordinatorModal(true)}
+                  className="group relative bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-xl rounded-3xl p-6 border border-indigo-500/20 hover:border-indigo-400/50 transition-all overflow-hidden flex-1 max-w-md"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/20 group-hover:to-purple-500/20 transition-all duration-500" />
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-shadow">
+                      👥
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-bold text-white mb-1">Create Coordinator</h3>
+                      <p className="text-sm text-gray-400">Event attendance management</p>
+                    </div>
+                    <div className="ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
                   </div>
@@ -704,6 +805,163 @@ export default function Home() {
           </div>
         </div>
       </motion.footer>
+
+      {/* Coordinator Creation Modal */}
+      <AnimatePresence>
+        {showCoordinatorModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowCoordinatorModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-8 max-w-md w-full border border-indigo-500/30 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30">
+                    👥
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">Create Coordinator</h2>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowCoordinatorModal(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </motion.button>
+              </div>
+
+              <form onSubmit={handleCreateCoordinator} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Admin Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={coordinatorForm.adminPassword}
+                    onChange={(e) => setCoordinatorForm({ ...coordinatorForm, adminPassword: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Enter admin password"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={coordinatorForm.name}
+                    onChange={(e) => setCoordinatorForm({ ...coordinatorForm, name: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={coordinatorForm.username}
+                    onChange={(e) => setCoordinatorForm({ ...coordinatorForm, username: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Username"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={coordinatorForm.password}
+                    onChange={(e) => setCoordinatorForm({ ...coordinatorForm, password: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Coordinator password"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Registration Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={coordinatorForm.registrationNo}
+                    onChange={(e) => setCoordinatorForm({ ...coordinatorForm, registrationNo: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Registration number"
+                  />
+                </div>
+
+                {coordinatorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl ${
+                      coordinatorMessage.type === "success"
+                        ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                        : "bg-red-500/20 border border-red-500/30 text-red-400"
+                    }`}
+                  >
+                    <p className="text-sm font-medium">{coordinatorMessage.text}</p>
+                  </motion.div>
+                )}
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={coordinatorLoading}
+                  className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                >
+                  {coordinatorLoading ? (
+                    <>
+                      <motion.svg
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </motion.svg>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Create Coordinator
+                    </>
+                  )}
+                </motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
