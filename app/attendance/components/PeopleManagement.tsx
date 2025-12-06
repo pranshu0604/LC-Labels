@@ -44,6 +44,9 @@ export default function PeopleManagement() {
     message: string;
     onConfirm: () => void;
   }>({ show: false, title: "", message: "", onConfirm: () => {} });
+  const [isAddingPerson, setIsAddingPerson] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Add person form
   const [newPerson, setNewPerson] = useState({
@@ -87,6 +90,7 @@ export default function PeopleManagement() {
       return;
     }
 
+    setIsAddingPerson(true);
     try {
       const res = await fetch("/api/attendance/people", {
         method: "POST",
@@ -135,6 +139,9 @@ export default function PeopleManagement() {
       }
     } catch (error) {
       console.error("Error adding person:", error);
+      toast.error("Failed to add person");
+    } finally {
+      setIsAddingPerson(false);
     }
   }
 
@@ -228,6 +235,7 @@ export default function PeopleManagement() {
       title: "Update Person",
       message: `Update ${duplicate.existing.name} with new data?`,
       onConfirm: async () => {
+        setIsUpdating(true);
         try {
           const res = await fetch("/api/attendance/people", {
             method: "PATCH",
@@ -249,6 +257,8 @@ export default function PeopleManagement() {
         } catch (error) {
           console.error("Error updating person:", error);
           toast.error("Failed to update person");
+        } finally {
+          setIsUpdating(false);
         }
         setConfirmDialog({ show: false, title: "", message: "", onConfirm: () => {} });
       },
@@ -265,6 +275,7 @@ export default function PeopleManagement() {
       onConfirm: async () => {
         if (!manualDuplicate) return;
 
+        setIsUpdating(true);
         try {
           const res = await fetch("/api/attendance/people", {
             method: "PATCH",
@@ -288,6 +299,8 @@ export default function PeopleManagement() {
         } catch (error) {
           console.error("Error updating person:", error);
           toast.error("Failed to update person");
+        } finally {
+          setIsUpdating(false);
         }
         setConfirmDialog({ show: false, title: "", message: "", onConfirm: () => {} });
       },
@@ -295,6 +308,7 @@ export default function PeopleManagement() {
   }
 
   async function handleExport() {
+    setIsExporting(true);
     try {
       const res = await fetch("/api/attendance/export");
       const blob = await res.blob();
@@ -310,6 +324,8 @@ export default function PeopleManagement() {
     } catch (error) {
       console.error("Error exporting:", error);
       toast.error("Failed to export data");
+    } finally {
+      setIsExporting(false);
     }
   }
 
@@ -362,16 +378,18 @@ export default function PeopleManagement() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     onClick={() => handleUpdateDuplicate(dup)}
-                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm"
+                    disabled={isUpdating}
+                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Update with New Data
+                    {isUpdating ? "Updating..." : "Update with New Data"}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     onClick={() =>
                       setDuplicateReviews(duplicateReviews.filter((d) => d !== dup))
                     }
-                    className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm"
+                    disabled={isUpdating}
+                    className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Keep Existing
                   </motion.button>
@@ -457,9 +475,10 @@ export default function PeopleManagement() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={handleExport}
-              className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold"
+              disabled={isExporting}
+              className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              📥 Export
+              {isExporting ? "Exporting..." : "📥 Export"}
             </motion.button>
           </div>
         </div>
@@ -480,7 +499,10 @@ export default function PeopleManagement() {
         </h2>
 
         {loading ? (
-          <div className="text-center text-gray-400 py-12">Loading...</div>
+          <div className="flex flex-col items-center justify-center text-gray-400 py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
+            <p>Loading people...</p>
+          </div>
         ) : (() => {
             const filteredPeople = people.filter((person) => {
               if (attendanceFilter === "all") return true;
@@ -569,14 +591,16 @@ export default function PeopleManagement() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     onClick={handleUpdateManualDuplicate}
-                    className="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl font-semibold"
+                    disabled={isUpdating}
+                    className="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Update with New Data
+                    {isUpdating ? "Updating..." : "Update with New Data"}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     onClick={() => setManualDuplicate(null)}
-                    className="flex-1 px-4 py-3 bg-white/10 text-white rounded-xl"
+                    disabled={isUpdating}
+                    className="flex-1 px-4 py-3 bg-white/10 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Keep Existing
                   </motion.button>
@@ -638,9 +662,10 @@ export default function PeopleManagement() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     onClick={handleAddPerson}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl"
+                    disabled={isAddingPerson}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add Person
+                    {isAddingPerson ? "Adding..." : "Add Person"}
                   </motion.button>
                 </div>
               </>
@@ -747,7 +772,10 @@ export default function PeopleManagement() {
                 Attendance History ({attendanceDates.length} days)
               </h4>
               {loadingAttendance ? (
-                <div className="text-center text-gray-400 py-8">Loading...</div>
+                <div className="flex flex-col items-center justify-center text-gray-400 py-8">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-500 mb-3"></div>
+                  <p>Loading attendance history...</p>
+                </div>
               ) : attendanceDates.length === 0 ? (
                 <div className="text-center text-gray-400 py-8">No attendance records found</div>
               ) : (

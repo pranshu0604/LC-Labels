@@ -60,6 +60,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Prevent marking attendance for future dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(date + "T00:00:00");
+
+    if (selectedDate > today) {
+      return NextResponse.json(
+        { error: "Cannot mark attendance for future dates" },
+        { status: 400 }
+      );
+    }
+
     // Check if already marked
     const existing = await pool.query(
       "SELECT * FROM attendance WHERE person_id = $1 AND date = $2",

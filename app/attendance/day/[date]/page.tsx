@@ -31,12 +31,22 @@ export default function DayAttendancePage() {
   const [selectedPeople, setSelectedPeople] = useState<number[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     show: boolean;
     title: string;
     message: string;
     onConfirm: () => void;
   }>({ show: false, title: "", message: "", onConfirm: () => {} });
+
+  // Check if the date is in the future
+  const isFutureDate = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(date + "T00:00:00");
+    return selectedDate > today;
+  };
 
   useEffect(() => {
     fetchAttendance();
@@ -68,6 +78,13 @@ export default function DayAttendancePage() {
   async function handleAddAttendance() {
     if (selectedPeople.length === 0) return;
 
+    // Check if trying to mark attendance for a future date
+    if (isFutureDate()) {
+      toast.error("Cannot mark attendance for future dates");
+      return;
+    }
+
+    setIsMarkingAttendance(true);
     try {
       const res = await fetch("/api/attendance/records/bulk", {
         method: "POST",
@@ -80,6 +97,11 @@ export default function DayAttendancePage() {
 
       const data = await res.json();
 
+      if (!res.ok) {
+        toast.error(data.error || "Failed to add attendance");
+        return;
+      }
+
       if (data.added.length > 0) {
         await fetchAttendance();
         setShowAddDialog(false);
@@ -90,6 +112,8 @@ export default function DayAttendancePage() {
     } catch (error) {
       console.error("Error adding attendance:", error);
       toast.error("Failed to add attendance");
+    } finally {
+      setIsMarkingAttendance(false);
     }
   }
 
@@ -101,6 +125,7 @@ export default function DayAttendancePage() {
       onConfirm: async () => {
         // Optimistic update: remove from UI immediately
         setAttendance(prev => prev.filter(a => a.attendance_id !== attendanceId));
+        setIsRemoving(true);
 
         try {
           const res = await fetch(`/api/attendance/records?id=${attendanceId}`, {
@@ -116,6 +141,8 @@ export default function DayAttendancePage() {
           toast.error("Failed to remove attendance");
           // Revert optimistic update by refetching
           await fetchAttendance();
+        } finally {
+          setIsRemoving(false);
         }
         setConfirmDialog({ show: false, title: "", message: "", onConfirm: () => {} });
       },
@@ -170,10 +197,21 @@ export default function DayAttendancePage() {
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowAddDialog(true)}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl shadow-lg"
+            whileHover={{ scale: isFutureDate() ? 1 : 1.05 }}
+            whileTap={{ scale: isFutureDate() ? 1 : 0.95 }}
+            onClick={() => {
+              if (isFutureDate()) {
+                toast.error("Cannot mark attendance for future dates");
+              } else {
+                setShowAddDialog(true);
+              }
+            }}
+            disabled={isFutureDate()}
+            className={`px-6 py-3 font-semibold rounded-xl shadow-lg ${
+              isFutureDate()
+                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+            }`}
           >
             + Mark Attendance
           </motion.button>
@@ -182,7 +220,15 @@ export default function DayAttendancePage() {
 
       <main className="relative flex-1 max-w-7xl mx-auto w-full px-6 py-8">
         {loading ? (
-          <div className="text-center text-white py-20">Loading...</div>
+          <div className="flex flex-col items-center justify-center text-white py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-500 mb-4"></div>
+            <p className="text-gray-400">Loading attendance data...</p>
+          </div>
+        ) : isFutureDate() ? (
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-12 border border-white/10 text-center">
+            <p className="text-gray-400 text-lg mb-4">Cannot mark attendance for future dates</p>
+            <p className="text-gray-500 text-sm">Please select today or a past date</p>
+          </div>
         ) : attendance.length === 0 ? (
           <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-12 border border-white/10 text-center">
             <p className="text-gray-400 text-lg mb-4">No attendance recorded for this day</p>
@@ -295,10 +341,17 @@ export default function DayAttendancePage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddAttendance}
-                disabled={selectedPeople.length === 0}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl disabled:opacity-50"
+                disabled={selectedPeople.length === 0 || isMarkingAttendance}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Mark {selectedPeople.length} {selectedPeople.length === 1 ? "Person" : "People"}
+                {isMarkingAttendance ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Marking...
+                  </span>
+                ) : (
+                  `Mark ${selectedPeople.length} ${selectedPeople.length === 1 ? "Person" : "People"}`
+                )}
               </motion.button>
             </div>
           </motion.div>
@@ -320,16 +373,25 @@ export default function DayAttendancePage() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 onClick={() => setConfirmDialog({ show: false, title: "", message: "", onConfirm: () => {} })}
-                className="flex-1 px-6 py-3 bg-white/10 text-white rounded-xl"
+                disabled={isRemoving}
+                className="flex-1 px-6 py-3 bg-white/10 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 onClick={confirmDialog.onConfirm}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl"
+                disabled={isRemoving}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Remove
+                {isRemoving ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Removing...
+                  </span>
+                ) : (
+                  "Remove"
+                )}
               </motion.button>
             </div>
           </motion.div>

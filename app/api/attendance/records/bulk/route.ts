@@ -24,6 +24,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Prevent marking attendance for future dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(date + "T00:00:00");
+
+    if (selectedDate > today) {
+      return NextResponse.json(
+        { error: "Cannot mark attendance for future dates" },
+        { status: 400 }
+      );
+    }
+
     const client = await pool.connect();
     const results = {
       added: [] as any[],

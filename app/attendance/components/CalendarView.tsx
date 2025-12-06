@@ -66,11 +66,22 @@ export default function CalendarView() {
   for (let day = 1; day <= daysInMonth; day++) {
     const inRange = isDateInRange(2025, selectedMonth, day);
     const isTodayDate = isToday(2025, selectedMonth, day);
-    calendarDays.push({ day, inRange, isToday: isTodayDate });
+    const dateObj = new Date(2025, selectedMonth, day);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    const isFuture = dateObj > todayDate;
+    calendarDays.push({ day, inRange, isToday: isTodayDate, isFuture });
   }
 
   function handleDateClick(day: number) {
     if (!isDateInRange(2025, selectedMonth, day)) return;
+
+    // Prevent clicking on future dates
+    const clickedDate = new Date(2025, selectedMonth, day);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    if (clickedDate > todayDate) return;
 
     const dateStr = `2025-${String(selectedMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     router.push(`/attendance/day/${dateStr}`);
@@ -124,15 +135,17 @@ export default function CalendarView() {
             {calendarDays.map((item, index) => (
               <motion.button
                 key={index}
-                whileHover={item.inRange ? { scale: 1.05 } : {}}
-                whileTap={item.inRange ? { scale: 0.95 } : {}}
+                whileHover={item.inRange && !item.isFuture ? { scale: 1.05 } : {}}
+                whileTap={item.inRange && !item.isFuture ? { scale: 0.95 } : {}}
                 onClick={() => item.day && handleDateClick(item.day)}
-                disabled={!item.inRange}
+                disabled={!item.inRange || item.isFuture}
                 className={`aspect-square rounded-xl flex items-center justify-center font-semibold transition-all ${
                   !item.day
                     ? "invisible"
                     : item.isToday
                     ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-2 border-emerald-400 shadow-lg cursor-pointer ring-2 ring-emerald-400/50"
+                    : item.isFuture
+                    ? "bg-white/5 text-gray-600 cursor-not-allowed"
                     : item.inRange
                     ? "bg-white/10 text-white hover:bg-cyan-500/30 hover:border-cyan-400 border-2 border-transparent cursor-pointer"
                     : "bg-white/5 text-gray-600 cursor-not-allowed"
