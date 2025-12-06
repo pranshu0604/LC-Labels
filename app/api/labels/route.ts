@@ -155,112 +155,55 @@ export async function POST(req: Request) {
     const colWidthsChars = [40, 3, 40, 3, 40];
     const lineHeightPoints = 15; // approximate line height in points per text line
 
-    // Add rows: 3 labels per row (in columns 1, 3, 5 with spacers in between)
-    // For name-designation mode: repeat same label 3 times per row
-    // For other modes: use 3 different labels per row
-    if (labelMode === "name-designation-address-phone") {
-      // Repeat each label 3 times in a row
-      for (let i = 0; i < labels.length; i++) {
-        const lbl = labels[i] || "";
+    // Add rows: repeat each label 3 times per row (in columns 1, 3, 5 with spacers in between)
+    // All modes now work the same way: same label 3 times per row
+    for (let i = 0; i < labels.length; i++) {
+      const lbl = labels[i] || "";
 
-        // positions: [filled, spacer, filled, spacer, filled]
-        const values = [lbl, "", lbl, "", lbl];
-        const row = worksheet.addRow(values);
+      // positions: [filled, spacer, filled, spacer, filled]
+      const values = [lbl, "", lbl, "", lbl];
+      const row = worksheet.addRow(values);
 
-        // compute required lines for each filled cell (columns 1,3,5)
-        const filledIndices = [0, 2, 4]; // 0-based for our array of values
-        let maxLines = 1;
-        for (const idx of filledIndices) {
-          const txt = String(values[idx] ?? "");
-          const colWidth = colWidthsChars[idx] || 40;
-          const lines = estimateLinesForText(txt, colWidth);
-          if (lines > maxLines) maxLines = lines;
-        }
-
-        // set row height based on the maximum number of lines among filled cells
-        row.height = Math.max(1, maxLines) * lineHeightPoints;
-
-        // apply alignment, wrapText and thick border to all cells
-        for (let idx = 1; idx <= 5; idx++) {
-          const cell = row.getCell(idx);
-          cell.alignment = { wrapText: true, horizontal: "center", vertical: "middle" };
-          cell.border = {
-            top: { style: "thick" },
-            left: { style: "thick" },
-            bottom: { style: "thick" },
-            right: { style: "thick" },
-          };
-          if (cell.value == null) cell.value = "";
-        }
-
-        // insert a thin empty spacer row after the filled row
-        const spacer = worksheet.addRow(["", "", "", "", ""]);
-        spacer.height = 6; // small spacer height in points
-
-        // Ensure spacer row only has 5 cells and apply thick borders there too
-        for (let idx = 1; idx <= 5; idx++) {
-          const cell = spacer.getCell(idx);
-          cell.border = {
-            top: { style: "thick" },
-            left: { style: "thick" },
-            bottom: { style: "thick" },
-            right: { style: "thick" },
-          };
-          if (cell.value == null) cell.value = "";
-        }
+      // compute required lines for each filled cell (columns 1,3,5)
+      const filledIndices = [0, 2, 4]; // 0-based for our array of values
+      let maxLines = 1;
+      for (const idx of filledIndices) {
+        const txt = String(values[idx] ?? "");
+        const colWidth = colWidthsChars[idx] || 40;
+        const lines = estimateLinesForText(txt, colWidth);
+        if (lines > maxLines) maxLines = lines;
       }
-    } else {
-      // Process labels in chunks of 3 (original behavior for other modes)
-      for (let i = 0; i < labels.length; i += 3) {
-        const lbl1 = labels[i] || "";
-        const lbl2 = labels[i + 1] || "";
-        const lbl3 = labels[i + 2] || "";
 
-        // positions: [filled, spacer, filled, spacer, filled]
-        const values = [lbl1, "", lbl2, "", lbl3];
-        const row = worksheet.addRow(values);
+      // set row height based on the maximum number of lines among filled cells
+      row.height = Math.max(1, maxLines) * lineHeightPoints;
 
-        // compute required lines for each filled cell (columns 1,3,5)
-        const filledIndices = [0, 2, 4]; // 0-based for our array of values
-        let maxLines = 1;
-        for (const idx of filledIndices) {
-          const txt = String(values[idx] ?? "");
-          const colWidth = colWidthsChars[idx] || 40;
-          const lines = estimateLinesForText(txt, colWidth);
-          if (lines > maxLines) maxLines = lines;
-        }
+      // apply alignment, wrapText and thick border to all cells
+      for (let idx = 1; idx <= 5; idx++) {
+        const cell = row.getCell(idx);
+        cell.alignment = { wrapText: true, horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thick" },
+          left: { style: "thick" },
+          bottom: { style: "thick" },
+          right: { style: "thick" },
+        };
+        if (cell.value == null) cell.value = "";
+      }
 
-        // set row height based on the maximum number of lines among filled cells
-        row.height = Math.max(1, maxLines) * lineHeightPoints;
+      // insert a thin empty spacer row after the filled row
+      const spacer = worksheet.addRow(["", "", "", "", ""]);
+      spacer.height = 6; // small spacer height in points
 
-        // apply alignment, wrapText and thick border to all cells
-        for (let idx = 1; idx <= 5; idx++) {
-          const cell = row.getCell(idx);
-          cell.alignment = { wrapText: true, horizontal: "center", vertical: "middle" };
-          cell.border = {
-            top: { style: "thick" },
-            left: { style: "thick" },
-            bottom: { style: "thick" },
-            right: { style: "thick" },
-          };
-          if (cell.value == null) cell.value = "";
-        }
-
-        // insert a thin empty spacer row after the filled row
-        const spacer = worksheet.addRow(["", "", "", "", ""]);
-        spacer.height = 6; // small spacer height in points
-
-        // Ensure spacer row only has 5 cells and apply thick borders there too
-        for (let idx = 1; idx <= 5; idx++) {
-          const cell = spacer.getCell(idx);
-          cell.border = {
-            top: { style: "thick" },
-            left: { style: "thick" },
-            bottom: { style: "thick" },
-            right: { style: "thick" },
-          };
-          if (cell.value == null) cell.value = "";
-        }
+      // Ensure spacer row only has 5 cells and apply thick borders there too
+      for (let idx = 1; idx <= 5; idx++) {
+        const cell = spacer.getCell(idx);
+        cell.border = {
+          top: { style: "thick" },
+          left: { style: "thick" },
+          bottom: { style: "thick" },
+          right: { style: "thick" },
+        };
+        if (cell.value == null) cell.value = "";
       }
     }
 
