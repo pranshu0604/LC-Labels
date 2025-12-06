@@ -243,9 +243,9 @@ export default function Home() {
           </motion.div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-white tracking-tight">
-              LitChowk Labels
+              Litchowk Management System
             </h1>
-            <p className="text-cyan-400/80 text-sm">Excel → Printable Labels</p>
+            <p className="text-cyan-400/80 text-sm">Complete Management Solution</p>
           </div>
           <div className="flex items-center gap-2">
             <motion.div
@@ -270,7 +270,7 @@ export default function Home() {
               animate="animate"
               exit="exit"
               transition={{ duration: 0.4 }}
-              className="space-y-6"
+              className="space-y-10"
             >
               <div className="text-center">
                 <motion.h2
@@ -278,7 +278,7 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   className="text-4xl font-bold text-white mb-3"
                 >
-                  Choose Your Label Type
+                  Management Dashboard
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -286,145 +286,157 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="text-gray-400"
                 >
-                  Select the format that matches your needs
+                  Select a module to get started
                 </motion.p>
               </div>
 
-              {/* Attendance System Button */}
+              {/* Label Generator Section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex justify-center gap-4"
+                transition={{ delay: 0.15 }}
+                className="space-y-4"
               >
-                <motion.button
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => window.location.href = "/attendance"}
-                  className="group relative bg-gradient-to-br from-orange-500/10 to-pink-500/10 backdrop-blur-xl rounded-3xl p-6 border border-orange-500/20 hover:border-orange-400/50 transition-all overflow-hidden flex-1 max-w-md"
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+                  <h3 className="text-lg font-semibold text-cyan-400 flex items-center gap-2">
+                    <span className="text-xl">🏷️</span>
+                    Label Generator
+                  </h3>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+                </div>
+                <motion.div
+                  variants={staggerContainer}
+                  initial="initial"
+                  animate="animate"
+                  className="grid grid-cols-1 md:grid-cols-3 gap-5"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/20 group-hover:to-pink-500/20 transition-all duration-500" />
-                  <div className="relative z-10 flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-shadow">
-                      📋
+                  <motion.button
+                    variants={scaleIn}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setMode("with-from")}
+                    className="group relative bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-xl rounded-3xl p-8 border border-emerald-500/20 hover:border-emerald-400/50 transition-all overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/20 group-hover:to-teal-500/20 transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 mb-4 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
+                        📦
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">With From Field</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Name, Phone, Address + Sender Information</p>
                     </div>
-                    <div className="text-left">
-                      <h3 className="text-xl font-bold text-white mb-1">Attendance System</h3>
-                      <p className="text-sm text-gray-400">Manage attendance records</p>
-                    </div>
-                    <div className="ml-auto text-orange-400 group-hover:translate-x-1 transition-transform">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </motion.button>
+                  </motion.button>
 
-                {/* Event Attendance Button */}
-                <motion.button
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => window.location.href = "/event-attendance"}
-                  className="group relative bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-xl rounded-3xl p-6 border border-emerald-500/20 hover:border-emerald-400/50 transition-all overflow-hidden flex-1 max-w-md"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/20 group-hover:to-teal-500/20 transition-all duration-500" />
-                  <div className="relative z-10 flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
-                      🎪
+                  <motion.button
+                    variants={scaleIn}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setMode("without-from")}
+                    className="group relative bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl rounded-3xl p-8 border border-cyan-500/20 hover:border-cyan-400/50 transition-all overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/20 group-hover:to-blue-500/20 transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 mb-4 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-shadow">
+                        📄
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">Without From Field</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Name, Phone, and Address only</p>
                     </div>
-                    <div className="text-left">
-                      <h3 className="text-xl font-bold text-white mb-1">Event Attendance</h3>
-                      <p className="text-sm text-gray-400">Coordinator volunteer tracking</p>
-                    </div>
-                    <div className="ml-auto text-emerald-400 group-hover:translate-x-1 transition-transform">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </motion.button>
+                  </motion.button>
 
-                {/* Create Coordinator Button */}
-                <motion.button
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowCoordinatorModal(true)}
-                  className="group relative bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-xl rounded-3xl p-6 border border-indigo-500/20 hover:border-indigo-400/50 transition-all overflow-hidden flex-1 max-w-md"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/20 group-hover:to-purple-500/20 transition-all duration-500" />
-                  <div className="relative z-10 flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-shadow">
-                      👥
+                  <motion.button
+                    variants={scaleIn}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setMode("name-designation-address-phone")}
+                    className="group relative bg-gradient-to-br from-violet-500/10 to-purple-500/10 backdrop-blur-xl rounded-3xl p-8 border border-violet-500/20 hover:border-violet-400/50 transition-all overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/0 to-purple-500/0 group-hover:from-violet-500/20 group-hover:to-purple-500/20 transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 mb-4 bg-gradient-to-br from-violet-400 to-purple-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow">
+                        👤
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">Name + Designation</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Name, Designation, Address, Phone</p>
                     </div>
-                    <div className="text-left">
-                      <h3 className="text-xl font-bold text-white mb-1">Create Coordinator</h3>
-                      <p className="text-sm text-gray-400">Event attendance management</p>
-                    </div>
-                    <div className="ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    </div>
-                  </div>
-                </motion.button>
+                  </motion.button>
+                </motion.div>
               </motion.div>
 
+              {/* Attendance Management Section */}
               <motion.div
-                variants={staggerContainer}
-                initial="initial"
-                animate="animate"
-                className="grid grid-cols-1 md:grid-cols-3 gap-5"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="space-y-4"
               >
-                <motion.button
-                  variants={scaleIn}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setMode("with-from")}
-                  className="group relative bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-xl rounded-3xl p-8 border border-emerald-500/20 hover:border-emerald-400/50 transition-all overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/20 group-hover:to-teal-500/20 transition-all duration-500" />
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 mb-4 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
-                      📦
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+                  <h3 className="text-lg font-semibold text-orange-400 flex items-center gap-2">
+                    <span className="text-xl">📊</span>
+                    Attendance Management
+                  </h3>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => window.location.href = "/attendance"}
+                    className="group relative bg-gradient-to-br from-orange-500/10 to-pink-500/10 backdrop-blur-xl rounded-3xl p-8 border border-orange-500/20 hover:border-orange-400/50 transition-all overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/20 group-hover:to-pink-500/20 transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 mb-4 bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-shadow">
+                        📋
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">Attendance System</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Manage daily attendance records</p>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">With From Field</h3>
-                    <p className="text-sm text-gray-400 leading-relaxed">Name, Phone, Address + Sender Information</p>
-                  </div>
-                </motion.button>
+                  </motion.button>
 
-                <motion.button
-                  variants={scaleIn}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setMode("without-from")}
-                  className="group relative bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl rounded-3xl p-8 border border-cyan-500/20 hover:border-cyan-400/50 transition-all overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/20 group-hover:to-blue-500/20 transition-all duration-500" />
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 mb-4 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-shadow">
-                      🏷️
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => window.location.href = "/event-attendance"}
+                    className="group relative bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-xl rounded-3xl p-8 border border-emerald-500/20 hover:border-emerald-400/50 transition-all overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/20 group-hover:to-teal-500/20 transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 mb-4 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
+                        🎪
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">Event Attendance</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Coordinator volunteer tracking</p>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Without From Field</h3>
-                    <p className="text-sm text-gray-400 leading-relaxed">Name, Phone, and Address only</p>
-                  </div>
-                </motion.button>
+                  </motion.button>
 
-                <motion.button
-                  variants={scaleIn}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setMode("name-designation-address-phone")}
-                  className="group relative bg-gradient-to-br from-violet-500/10 to-purple-500/10 backdrop-blur-xl rounded-3xl p-8 border border-violet-500/20 hover:border-violet-400/50 transition-all overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/0 to-purple-500/0 group-hover:from-violet-500/20 group-hover:to-purple-500/20 transition-all duration-500" />
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 mb-4 bg-gradient-to-br from-violet-400 to-purple-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow">
-                      👤
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowCoordinatorModal(true)}
+                    className="group relative bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-xl rounded-3xl p-8 border border-indigo-500/20 hover:border-indigo-400/50 transition-all overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/20 group-hover:to-purple-500/20 transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 mb-4 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-shadow">
+                        👥
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">Create Coordinator</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">Event attendance management</p>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Name + Designation</h3>
-                    <p className="text-sm text-gray-400 leading-relaxed">Name, Designation, Address, Phone</p>
-                  </div>
-                </motion.button>
+                  </motion.button>
+                </div>
               </motion.div>
             </motion.div>
           )}
@@ -801,7 +813,7 @@ export default function Home() {
             </div>
           </div>
           <div className="text-sm text-gray-500">
-            © 2025 LitChowk Labels
+            © 2025 Litchowk Management System
           </div>
         </div>
       </motion.footer>

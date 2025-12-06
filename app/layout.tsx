@@ -13,14 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LitChowk Label Editor - Generate Printable Labels from Excel",
+  title: "LitChowk Management System",
   description:
-    "Transform your Excel data into beautifully formatted, printable labels. Upload your spreadsheet and generate professional labels instantly.",
+    "Management solution for team LitChowk",
   keywords: ["label generator", "excel to labels", "printable labels", "LitChowk"],
   authors: [{ name: "Pranshu Pandey" }],
   openGraph: {
-    title: "LitChowk Label Editor",
-    description: "Transform your Excel data into printable labels instantly",
+    title: "LitChowk Management System",
+    description: "Management solution for team LitChowk",
     type: "website",
   },
 };
